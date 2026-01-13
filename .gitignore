@@ -44,6 +44,10 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
+# Node modules
+functions/node_modules/
+node_modules/
+
 # Sensitive files - API Keys and Firebase config
 lib/config/api_keys.dart
 **/google-services.json
