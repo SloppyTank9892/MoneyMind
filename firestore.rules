@@ -1,0 +1,46 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Helper function to check if user is admin of the university
+    function isAdminOf(uniId) {
+      let userDoc = get(/databases/$(database)/documents/users/$(request.auth.uid));
+      return userDoc != null 
+          && userDoc.data.role == "admin" 
+          && userDoc.data.university_id == uniId;
+    }
+
+    // Users Collection
+    match /users/{userId} {
+      // Users can read, create, and update their own public profile (role, university_id)
+      allow read, create, update: if isAuthenticated() && request.auth.uid == userId;
+      
+      // Private Subcollection: Only the user can access
+      match /private/{document=**} {
+        allow read, write: if isAuthenticated() && request.auth.uid == userId;
+      }
+      
+      // Features Subcollection: Only user can read
+      match /features/{document=**} {
+        allow read: if isAuthenticated() && request.auth.uid == userId;
+        // Only cloud functions (backend) write here usually, but if client does, strictly validate.
+        // For now, assuming Cloud Functions use Admin SDK which bypasses rules.
+        allow write: if false; 
+      }
+    }
+
+    // Universities Collection
+    match /universities/{uniId} {
+      // Only admins of this university can read student data
+      match /students/{studentId}/{document=**} {
+        allow read: if isAuthenticated() && isAdminOf(uniId);
+        allow write: if false; // Only Cloud Functions write here
+      }
+    }
+  }
+}
