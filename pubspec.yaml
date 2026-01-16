@@ -42,7 +42,7 @@ dependencies:
   cloud_functions: ^4.6.6
   
   # AI & Networking
-  google_generative_ai: ^0.2.2
+  google_generative_ai: ^0.4.7
   http: ^1.2.0
   
   # UI & Visualization

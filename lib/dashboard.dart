@@ -23,6 +23,11 @@ class _DashboardState extends State<Dashboard> with SingleTickerProviderStateMix
     super.initState();
     _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 800));
     _controller.forward();
+    
+    // Trigger stress index calculation on load (in case it's missing)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _firestoreService.recalculateStressIndex();
+    });
   }
 
   @override
@@ -62,25 +67,43 @@ class _DashboardState extends State<Dashboard> with SingleTickerProviderStateMix
                     letterSpacing: 0.5,
                   ),
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: features.getRiskColor().withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: features.getRiskColor().withOpacity(0.3),
-                      width: 1,
+                Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.refresh, size: 20),
+                      color: Colors.grey[400],
+                      tooltip: 'Refresh Stress Index',
+                      onPressed: () async {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Recalculating stress index...'),
+                            duration: Duration(seconds: 2),
+                          ),
+                        );
+                        await _firestoreService.recalculateStressIndex();
+                      },
                     ),
-                  ),
-                  child: Text(
-                    features.riskLevel,
-                    style: TextStyle(
-                      color: features.getRiskColor(),
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                      letterSpacing: 0.5,
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: features.getRiskColor().withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: features.getRiskColor().withOpacity(0.3),
+                          width: 1,
+                        ),
+                      ),
+                      child: Text(
+                        features.riskLevel,
+                        style: TextStyle(
+                          color: features.getRiskColor(),
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
                     ),
-                  ),
+                  ],
                 ),
               ],
             ),

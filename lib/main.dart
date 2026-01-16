@@ -11,8 +11,9 @@ import 'services/firestore_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-  runApp(const MoneyMind());
+    runApp(const MoneyMind());
 }
+
 
 class MoneyMind extends StatelessWidget {
   // Allow tests to inject a pre-determined current user to avoid calling
