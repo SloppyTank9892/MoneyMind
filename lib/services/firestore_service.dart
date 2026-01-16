@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_functions/cloud_functions.dart';
 import '../models/user_profile.dart';
 import '../models/mood_entry.dart';
 import '../models/spending_entry.dart';
@@ -137,25 +136,12 @@ class FirestoreService {
   // Recalculate Financial Stress Index in real-time
   Future<void> recalculateStressIndex() async {
     try {
-      print('🔄 Triggering stress index recalculation...');
-      final functions = FirebaseFunctions.instance;
-      final result = await functions.httpsCallable('recalculateStressIndex').call();
-      print('✅ Stress index recalculated: ${result.data}');
-    } on FirebaseFunctionsException catch (e) {
-      print('❌ Firebase Functions Error: ${e.code} - ${e.message}');
-      print('❌ Details: ${e.details}');
-      
-      // If the function doesn't exist or there's a permission issue, 
-      // we'll calculate it locally as a fallback
-      if (e.code == 'not-found' || e.code == 'unavailable') {
-        print('⚠️ Cloud Function not available, calculating locally...');
-        await _calculateStressIndexLocally();
-      }
-    } catch (e, stackTrace) {
-      print('❌ Error recalculating stress index: $e');
-      print('❌ Stack trace: $stackTrace');
-      // Try local calculation as fallback
+      print('🔄 Calculating stress index locally...');
       await _calculateStressIndexLocally();
+      print('✅ Local stress index recalculated via app');
+    } catch (e, stackTrace) {
+      print('❌ Error recalculating stress index locally: $e');
+      print('❌ Stack trace: $stackTrace');
     }
   }
   

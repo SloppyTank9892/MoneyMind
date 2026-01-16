@@ -106,22 +106,22 @@ async function calculateStressIndex(uid) {
   };
 
   // Update Student's View
-  await db.collection("users").doc(uid).collection("features").doc("summary").set(summaryData, { merge: true });
+  await db.collection("users").doc(uid).collection("features").doc("summary").set(summaryData, {merge: true});
 
   // Update University Admin's View (Copy)
   if (userData.university_id) {
     await db.collection("universities").doc(userData.university_id)
       .collection("students").doc(uid)
       .collection("features").doc("summary")
-      .set(summaryData, { merge: true });
+      .set(summaryData, {merge: true});
       
     // Also ensure the student exists in the uni list
     await db.collection("universities").doc(userData.university_id)
       .collection("students").doc(uid)
       .set({
-         uid: uid,
-         lastUpdated: admin.firestore.FieldValue.serverTimestamp()
-      }, { merge: true });
+        uid: uid,
+        lastUpdated: admin.firestore.FieldValue.serverTimestamp()
+      }, {merge: true});
   }
 
   return summaryData;
@@ -140,15 +140,15 @@ exports.dailyStressEngine = functions.pubsub.schedule("every 24 hours").onRun(as
 exports.recalculateStressIndex = functions.https.onCall(async (data, context) => {
   // Verify user is authenticated
   if (!context.auth) {
-    throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
+    throw new functions.https.HttpsError("unauthenticated", "User must be authenticated");
   }
 
   const uid = context.auth.uid;
   const result = await calculateStressIndex(uid);
   
   if (!result) {
-    throw new functions.https.HttpsError('not-found', 'User not found or not a student');
+    throw new functions.https.HttpsError("not-found", "User not found or not a student");
   }
 
-  return { success: true, financialStressIndex: result.financialStressIndex };
+  return {success: true, financialStressIndex: result.financialStressIndex};
 });

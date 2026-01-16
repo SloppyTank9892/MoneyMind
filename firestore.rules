@@ -8,29 +8,31 @@ service cloud.firestore {
     }
     
     // Helper function to check if user is admin of the university
+    // Safely checks if user document exists before accessing data
     function isAdminOf(uniId) {
-      let userDoc = get(/databases/$(database)/documents/users/$(request.auth.uid));
-      return userDoc != null 
-          && userDoc.data.role == "admin" 
-          && userDoc.data.university_id == uniId;
+      return isAuthenticated() 
+          && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+          && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin" 
+          && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.university_id == uniId;
     }
 
     // Users Collection
     match /users/{userId} {
       // Users can read, create, and update their own public profile (role, university_id)
+      // This allows new users to create their document during signup
       allow read, create, update: if isAuthenticated() && request.auth.uid == userId;
       
       // Private Subcollection: Only the user can access
+      // This includes: profile, moods, spending, aiChats
       match /private/{document=**} {
         allow read, write: if isAuthenticated() && request.auth.uid == userId;
       }
       
       // Features Subcollection: Only user can read
+      // Cloud Functions write here, clients can only read
       match /features/{document=**} {
         allow read: if isAuthenticated() && request.auth.uid == userId;
-        // Only cloud functions (backend) write here usually, but if client does, strictly validate.
-        // For now, assuming Cloud Functions use Admin SDK which bypasses rules.
-        allow write: if false; 
+        allow write: if false; // Only Cloud Functions (Admin SDK) can write
       }
     }
 
